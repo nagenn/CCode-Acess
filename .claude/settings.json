@@ -1,0 +1,20 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "filesystem": {
+      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/Desktop", "~/Documents", "~/Downloads", "~/Pictures"]
+    }
+  },
+  "permissions": {
+    "deny": [
+      "Read(**/.env*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(**/*credentials*)",
+      "Read(~/Desktop/**)",
+      "Read(~/Documents/**)",
+      "Read(~/Downloads/**)",
+      "Read(~/Pictures/**)"
+    ]
+  }
+}
