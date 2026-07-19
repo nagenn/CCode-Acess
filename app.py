@@ -88,15 +88,15 @@ class AgentReview(BaseModel):
 # ----------------------------
 # HELPERS
 # ----------------------------
-def status_from_risk(risk: str) -> str:
+def status_from_risk(risk: str, cleared_label: str = "Agent Cleared", invalid_label: str = "Agent Review Failed") -> str:
     if risk == "High":
         return "Escalated for Legal Review"
     elif risk == "Medium":
         return "Flagged — Needs Attention"
-    elif risk == "Unknown":
-        return "Agent Review Failed"
+    elif risk == "Low":
+        return cleared_label
     else:
-        return "Agent Cleared"
+        return invalid_label
 
 
 def derive_vendor(filename: str) -> str:
@@ -190,12 +190,11 @@ def get_contract(contract_id: int):
 
 @app.post("/api/contracts/{contract_id}/manual-review")
 def manual_review(contract_id: int, review: ManualReview):
-    if review.risk_score == "High":
-        new_status = "Escalated for Legal Review"
-    elif review.risk_score == "Medium":
-        new_status = "Flagged — Needs Attention"
-    else:
-        new_status = "Manually Cleared"
+    new_status = status_from_risk(
+        review.risk_score,
+        cleared_label="Manually Cleared",
+        invalid_label="Manual Review Invalid",
+    )
 
     conn = get_db()
     conn.execute("""
