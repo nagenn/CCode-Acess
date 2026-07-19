@@ -188,6 +188,38 @@ def get_contract(contract_id: int):
     return dict(row)
 
 
+@app.get("/api/vendors/{vendor_name}/summary")
+def vendor_summary(vendor_name: str):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM contracts WHERE vendor = ? COLLATE NOCASE ORDER BY uploaded_at DESC",
+        (vendor_name,),
+    ).fetchall()
+    conn.close()
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="No contracts found for vendor")
+
+    escalated = sum(1 for r in rows if "escalated" in r["status"].lower())
+    flagged = sum(1 for r in rows if "flagged" in r["status"].lower())
+    cleared = sum(1 for r in rows if "cleared" in r["status"].lower())
+
+    agent_confidences = [
+        r["confidence"] for r in rows if r["review_type"] == "Agent" and r["confidence"] is not None
+    ]
+    average_confidence = round(sum(agent_confidences) / len(agent_confidences), 2) if agent_confidences else None
+
+    return {
+        "vendor": rows[0]["vendor"],
+        "total_contracts": len(rows),
+        "escalated": escalated,
+        "flagged": flagged,
+        "cleared": cleared,
+        "average_confidence": average_confidence,
+        "most_recent_status": rows[0]["status"],
+    }
+
+
 @app.post("/api/contracts/{contract_id}/manual-review")
 def manual_review(contract_id: int, review: ManualReview):
     new_status = status_from_risk(
