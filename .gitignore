@@ -1,2 +1,5 @@
 .env
 contracts.db
+tests/report.html
+tests/__pycache__/
+.pytest_cache/
